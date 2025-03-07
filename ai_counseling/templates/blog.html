@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="rainbow"></div>
+<div class="card">
+    <h1>Wellness Blog</h1>
+    <a href="{{ url_for('new_post') }}" class="button create-post-btn">Create New Post</a>
+</div>
+<div id="blog-posts">
+    {% for post in posts %}
+    <div class="card blog-post">
+        <h2>{{ post.title }}</h2>
+        <p>By {{ post.users.email }} on {{ post.created_at[:19].replace('T', ' ') }}</p>
+        <p>{{ post.content[:200] }}{% if post.content|length > 200 %}...{% endif %}</p>
+        <a href="{{ url_for('view_post', post_id=post.id) }}" class="button">Read More</a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        gsap.from('.card', { duration: 1, y: 50, opacity: 0, stagger: 0.2, ease: 'power3.out' });
+        gsap.from('.button', { duration: 0.5, scale: 0.9, opacity: 0, stagger: 0.1, ease: 'power3.out', delay: 1 });
+        
+        // Add animated elements
+        const animatedElements = ['🦄', '🧁', '🌈'];
+        for (let i = 0; i < 20; i++) {
+            let element = document.createElement('div');
+            element.className = 'animated-element';
+            element.textContent = animatedElements[Math.floor(Math.random() * animatedElements.length)];
+            element.style.left = `${Math.random() * 100}%`;
+            element.style.top = `${Math.random() * 100}%`;
+            element.style.animationDelay = `${Math.random() * 5}s`;
+            document.body.appendChild(element);
+        }
+    });
+</script>
+{% endblock %}
+

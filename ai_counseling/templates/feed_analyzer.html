@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="rainbow"></div>
+<div class="card">
+  <h1>Mend_hel Feed Analyzer</h1>
+  <p>Upload a video containing short-form content (e.g., Instagram Reels, YouTube Shorts, or TikTok) for analysis.</p>
+  <form method="POST" enctype="multipart/form-data">
+      <input type="file" name="video" accept=".mp4,.mov,.avi" required>
+      <button type="submit">Analyze Video</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+      gsap.from('.card', { duration: 1, y: 50, opacity: 0, ease: 'power3.out' });
+      gsap.from('input, button', { duration: 0.5, y: 20, opacity: 0, stagger: 0.1, ease: 'power3.out', delay: 0.5 });
+      
+      // Add animated elements
+      const animatedElements = ['🎥', '📊', '🧠'];
+      for (let i = 0; i < 20; i++) {
+          let element = document.createElement('div');
+          element.className = 'animated-element';
+          element.textContent = animatedElements[Math.floor(Math.random() * animatedElements.length)];
+          element.style.left = `${Math.random() * 100}%`;
+          element.style.top = `${Math.random() * 100}%`;
+          element.style.animationDelay = `${Math.random() * 5}s`;
+          document.body.appendChild(element);
+      }
+  });
+</script>
+{% endblock %}
+

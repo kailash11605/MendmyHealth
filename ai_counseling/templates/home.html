@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <h1>Welcome to Mend_hel</h1>
+    <p>Your safe space for mental wellness and support.</p>
+</div>
+<div class="card">
+    <h2>How can we help you today?</h2>
+    <div class="button-container">
+        <a href="{{ url_for('chat') }}" class="button">Chat with AI Counselor</a>
+        <a href="{{ url_for('blog') }}" class="button">Read Wellness Blog</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        gsap.from('.card', { duration: 1, y: 50, opacity: 0, stagger: 0.2, ease: 'power3.out' });
+        gsap.from('.button', { duration: 0.5, scale: 0.9, opacity: 0, stagger: 0.1, ease: 'power3.out', delay: 1 });
+    });
+</script>
+{% endblock %}
+

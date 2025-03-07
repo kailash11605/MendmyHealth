@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="rainbow"></div>
+<div class="card">
+    <h1>Your Profile</h1>
+    <p>Email: {{ user.email }}</p>
+    <h2>Mood Scores</h2>
+    <div id="mood-chart"></div>
+    <p>Average Mood Score: {{ "%.2f"|format(average_score) }}</p>
+    {% if average_score < 5 and mood_scores|length >= 10 %}
+    <div class="alert">
+        <p>Your average mood score is low. We recommend seeking help from a medical professional.</p>
+    </div>
+    {% endif %}
+    <div class="theme-selector">
+        <button id="light-theme" class="active">Light Theme</button>
+        <button id="dark-theme">Dark Theme</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        gsap.from('.card', { duration: 1, y: 50, opacity: 0, ease: 'power3.out' });
+        
+        const ctx = document.getElementById('mood-chart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array.from({length: {{ mood_scores|length }}}, (_, i) => i + 1),
+                datasets: [{
+                    label: 'Mood Score',
+                    data: {{ mood_scores|tojson }},
+                    borderColor: 'rgb(255, 99, 132)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 10
+                    }
+                }
+            }
+        });
+
+        // Theme selector
+        const lightThemeBtn = document.getElementById('light-theme');
+        const darkThemeBtn = document.getElementById('dark-theme');
+        const body = document.body;
+
+        lightThemeBtn.addEventListener('click', () => {
+            body.classList.remove('dark-theme');
+            lightThemeBtn.classList.add('active');
+            darkThemeBtn.classList.remove('active');
+            localStorage.setItem('theme', 'light');
+        });
+
+        darkThemeBtn.addEventListener('click', () => {
+            body.classList.add('dark-theme');
+            darkThemeBtn.classList.add('active');
+            lightThemeBtn.classList.remove('active');
+            localStorage.setItem('theme', 'dark');
+        });
+
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            body.classList.add('dark-theme');
+            darkThemeBtn.classList.add('active');
+            lightThemeBtn.classList.remove('active');
+        }
+    });
+</script>
+{% endblock %}
+

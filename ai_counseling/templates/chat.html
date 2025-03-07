@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="rainbow"></div>
+<div class="card chat-card">
+    <h1>Chat with AI Counselor</h1>
+    <div id="chat-container">
+        <div id="chat-messages">
+            {% for conversation in conversations %}
+                <p class="message"><strong>You:</strong> {{ conversation.user_input }}</p>
+                <p class="message"><strong>Bot:</strong> {{ conversation.bot_response }}</p>
+            {% endfor %}
+        </div>
+        <form id="chat-form">
+            <input type="text" id="user-input" placeholder="Type your message..." required>
+            <button type="submit">Send</button>
+        </form>
+    </div>
+    <button id="assess-button">Get Mental Health Assessment</button>
+    <button id="erase-chats">Erase Chat History</button>
+</div>
+<div id="assessment-result" style="display: none;"></div>
+<div id="mood-score" style="display: none;"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+<script>
+    const chatForm = document.getElementById('chat-form');
+    const userInput = document.getElementById('user-input');
+    const chatMessages = document.getElementById('chat-messages');
+    const assessButton = document.getElementById('assess-button');
+    const assessmentResult = document.getElementById('assessment-result');
+    const moodScoreDisplay = document.getElementById('mood-score');
+
+    chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const message = userInput.value;
+        userInput.value = '';
+
+        // Display user message
+        appendMessage('You', message);
+
+        // Send message to server and get response
+        const response = await fetch('/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `user_input=${encodeURIComponent(message)}`,
+        });
+
+        const data = await response.json();
+        appendMessage('Bot', data.response);
+        updateMoodScore(data.mood_score);
+    });
+
+    assessButton.addEventListener('click', async () => {
+        const response = await fetch('/assess', { method: 'POST' });
+        const assessment = await response.text();
+        assessmentResult.innerHTML = `<h2>Mental Health Assessment</h2><p>${assessment}</p>`;
+        assessmentResult.style.display = 'block';
+        gsap.from(assessmentResult, { duration: 0.5, y: 20, opacity: 0, ease: 'power3.out' });
+    });
+
+    function appendMessage(sender, message) {
+        const messageElement = document.createElement('p');
+        messageElement.className = 'message';
+        messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function updateMoodScore(score) {
+        moodScoreDisplay.innerHTML = `<p>Current Mood Score: ${score.toFixed(2)}</p>`;
+        moodScoreDisplay.style.display = 'block';
+        gsap.from(moodScoreDisplay, { duration: 0.5, y: 20, opacity: 0, ease: 'power3.out' });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        gsap.from('.card', { duration: 1, y: 50, opacity: 0, ease: 'power3.out' });
+        gsap.from('#chat-container', { duration: 0.5, scale: 0.95, opacity: 0, ease: 'power3.out', delay: 0.5 });
+        gsap.from('#assess-button', { duration: 0.5, y: 20, opacity: 0, ease: 'power3.out', delay: 1 });
+
+        // Add emojis in the background
+        const emojis = ['🦄', '🧁', '🌈'];
+        const emojiContainer = document.createElement('div');
+        emojiContainer.className = 'emoji-container';
+        document.body.appendChild(emojiContainer);
+
+        for (let i = 0; i < 30; i++) {
+            const emoji = document.createElement('div');
+            emoji.className = 'background-emoji';
+            emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            emoji.style.left = `${Math.random() * 100}%`;
+            emoji.style.top = `${Math.random() * 100}%`;
+            emojiContainer.appendChild(emoji);
+        }
+    });
+
+    // Ensure chat messages are scrolled to the bottom on page load
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Erase chat history
+    document.getElementById('erase-chats').addEventListener('click', async () => {
+        if (confirm('Are you sure you want to erase your chat history? This action cannot be undone.')) {
+            const response = await fetch('/erase_chats', { method: 'POST' });
+            if (response.ok) {
+                chatMessages.innerHTML = '';
+                flash('Chat history erased successfully.');
+            } else {
+                flash('Error erasing chat history.');
+            }
+        }
+    });
+
+    function flash(message) {
+        const flashDiv = document.createElement('div');
+        flashDiv.className = 'alert';
+        flashDiv.textContent = message;
+        document.body.insertBefore(flashDiv, document.body.firstChild);
+        setTimeout(() => flashDiv.remove(), 3000);
+    }
+
+    // Soft ripple effect
+    document.addEventListener('mousemove', (e) => {
+        const mouseX = e.clientX;
+        const mouseY = e.clientY;
+        
+        document.querySelectorAll('.background-emoji').forEach((emoji) => {
+            const emojiRect = emoji.getBoundingClientRect();
+            const emojiX = emojiRect.left + emojiRect.width / 2;
+            const emojiY = emojiRect.top + emojiRect.height / 2;
+            
+            const distX = mouseX - emojiX;
+            const distY = mouseY - emojiY;
+            const distance = Math.sqrt(distX * distX + distY * distY);
+            
+            const maxDistance = 100;
+            const force = Math.max(0, 1 - distance / maxDistance);
+            
+            const moveX = distX * force * 0.1;
+            const moveY = distY * force * 0.1;
+            
+            emoji.style.transform = `translate(${moveX}px, ${moveY}px)`;
+        });
+    });
+</script>
+{% endblock %}
+
